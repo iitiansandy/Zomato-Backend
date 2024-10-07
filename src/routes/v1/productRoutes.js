@@ -14,7 +14,7 @@ const {
 router.post("/api/v1/addProduct/:adminId", Authentication, Authorization, addProducts);
 
 // GET ALL PRODUCTS
-router.get("/api/v1/getAllProducts", Authentication, getAllProducts);
+router.get("/api/v1/getAllProducts", getAllProducts);
 
 // GET PRODUCT BY ID
 router.get("/api/v1/getProduct/:productId", getProductById);

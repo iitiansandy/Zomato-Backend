@@ -10,6 +10,8 @@ const { port } = require("../config/config");
 const { isValidObjectId } = require("mongoose");
 
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
+const customerModel = require('../models/customerModel');
+const { calculateDistance } = require('./restaurantController');
 
 
 let riderImgFolder = path.join(__dirname, "..", "riders");
@@ -233,6 +235,58 @@ const deleteRider = async (req, res) => {
         return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
     }
 };
+
+
+// GET CUSTOMER'S DISTANCE
+const getCustomerDistance = async (req, res) => {
+    try {
+        let { customerId } = req.params;
+        if (!customerId) {
+            return res.status(400).send({
+                status: false,
+                message: 'Customer Id is required'
+            });
+        };
+
+        let customer = await customerModel.findOne({ userId: customerId });
+        if (!customer) {
+            return res.status(400).send({
+                status: false,
+                message: 'No customer found with the given customerId'
+            });
+        };
+
+        let riderId = req.adminId;
+
+        let rider = await riderModel.findById(riderId);
+
+        if (!rider) {
+            return res.status(400).send({
+                status: false,
+                message: 'No rider found with the given riderId'
+            });
+        };
+
+        let e = rider.coordinates;
+        let r = customer.coordinates;
+
+        let distance = null;
+        if (e.latitude && e.longitude && r.latitude && r.longitude) {
+            distance = calculateDistance(e.latitude, e.longitude, r.latitude, r.longitude);
+        };
+
+        return res.status(200).send({
+            status: true,
+            message: 'Success',
+            data: distance
+        });
+
+
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+    }
+}
 
 
 module.exports = {

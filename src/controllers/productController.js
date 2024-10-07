@@ -1,6 +1,17 @@
 const productModel = require('../models/productModel');
 const customerModel = require('../models/customerModel');
-const { StatusCodes } = require('http-status-codes');
+
+const { 
+    created,
+    ok,
+    notFound,
+    internalServerError,
+    badRequest,
+    unauthorized,
+    forbidden,
+    reqTimeout,
+    paymentRequired
+  } = require('../uitls/statusCodes');
 
 const path = require("path");
 const fs = require("fs");
@@ -11,6 +22,7 @@ let { getCurrentIPAddress } = require("../uitls/utils");
 let { port, adminSecretKey } = require("../config/config");
 
 const { SuccessResponse, ErrorResponse } = require('../uitls/common');
+const { create } = require('../models/categoryModel');
 
 let productImgFolder = path.join(__dirname, "..", "productImages");
 
@@ -38,7 +50,7 @@ const addProducts = async (req, res) => {
             let { product_image } = req.files;
 
             if (!product_image) {
-                return res.status(StatusCodes.NOT_FOUND).send({
+                return res.status(notFound).send({
                     status: false,
                     message: 'Please upload the product image'
                 });
@@ -81,10 +93,10 @@ const addProducts = async (req, res) => {
 
         let newProduct = await productModel.create(productData);
         SuccessResponse.data = newProduct;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -94,10 +106,10 @@ const getAllProducts = async (req, res) => {
     try {
         let products = await productModel.find({});
         SuccessResponse.data = products;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(ok).send(SuccessResponse);
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send(ErrorResponse);
     }
 };
 
@@ -107,14 +119,14 @@ const getProductById = async (req, res) => {
     try {
         let { productId } = req.params;
         if (!productId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'productId is required'
             });
         };
 
         if (!isValidObjectId(productId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid productId'
             });
@@ -122,17 +134,17 @@ const getProductById = async (req, res) => {
 
         let product = await productModel.findById(productId);
         if (!product) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: `No product found with this productId: ${productId}`
             });
         };
 
         SuccessResponse.data = product;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -142,14 +154,14 @@ const updateProductById = async (req, res) => {
     try {
         let { productId } = req.params;
         if (!productId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'productId is required'
             });
         };
 
         if (!isValidObjectId(productId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid productId'
             });
@@ -157,7 +169,7 @@ const updateProductById = async (req, res) => {
 
         let p = await productModel.findById(productId);
         if (!p) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: `No product found with this productId: ${productId}`
             });
@@ -235,7 +247,7 @@ const updateProductById = async (req, res) => {
             let { product_image } = req.files;
 
             if (!product_image) {
-                return res.status(StatusCodes.NOT_FOUND).send({
+                return res.status(notFound).send({
                     status: false,
                     message: 'Please upload the product image'
                 });
@@ -260,11 +272,11 @@ const updateProductById = async (req, res) => {
         await p.save();
 
         SuccessResponse.data = p;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -274,14 +286,14 @@ const deleteProduct = async (req, res) => {
     try {
         let { productId } = req.params;
         if (!productId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'productId is required'
             });
         };
 
         if (!isValidObjectId(productId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid productId'
             });
@@ -290,7 +302,7 @@ const deleteProduct = async (req, res) => {
         let product = await productModel.findById(productId);
 
         if (!product) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: 'Product not found'
             });
@@ -307,15 +319,15 @@ const deleteProduct = async (req, res) => {
         let deletedProduct = await productModel.findByIdAndDelete({ _id: productId });
 
         if (!deletedProduct) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: 'Product not found or already deleted'
             });
         };
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 

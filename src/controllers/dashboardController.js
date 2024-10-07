@@ -1,7 +1,16 @@
 const categoryModel = require("../models/categoryModel");
 const bannerImageModel = require("../models/bannerModel");
 const { getCurrentIPAddress } = require("../uitls/utils");
-const { StatusCodes } = require("http-status-codes");
+const {
+    badRequest,
+    notFound,
+    created,
+    internalServerError,
+    unauthorized,
+    forbidden,
+} = require('../uitls/statusCodes');
+
+
 
 
 const uuid = require("uuid");
@@ -36,6 +45,29 @@ const getDashboard = async (req, res) => {
             categoryList: categories,
             bannerImages: banners,
             myOrders,
+        });
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.error = error;
+        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+    }
+};
+
+
+// GET ADMIN DASHBOARD
+const getAdminDashboard = async (req, res) => {
+    try {
+        let allOrders = await orderModel.find({});
+        let categories = await categoryModel.find({});
+        let bannerObj = await bannerImageModel.findOne();
+        let bannerImages = bannerObj.bannerImages;
+
+        return res.status(200).send({
+            status: true,
+            message: 'Success',
+            bannerImages,
+            categoryList: categories,
+            allOrders
         });
     } catch (error) {
         console.log(error);
@@ -200,6 +232,7 @@ const deleteBannerImage = async (req, res) => {
 
 module.exports = {
     getDashboard,
+    getAdminDashboard,
     addUpdateBanners,
     deleteBannerImage
 }
