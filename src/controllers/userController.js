@@ -122,7 +122,7 @@ const registerUser = async (req, res) => {
 
             user.profilePic = imgObj;
             user.name = parsedData.name?? user.name;
-            user.email = parsedData.email ?? user.email;
+            user.email = parsedData.email?? user.email;
             user.sessionToken = generateRandomAlphaNumericID(40);
             user.coordinates.latitude = parsedData.coordinates.latitude?? user.coordinates.latitude;
             user.coordinates.longitude = parsedData.coordinates.latitude?? user.coordinates.longitude;

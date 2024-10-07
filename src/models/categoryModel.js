@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const categorySchema = new mongoose.Schema({
-    categoryName: {
+    name: {
         type: String,
     },
 
