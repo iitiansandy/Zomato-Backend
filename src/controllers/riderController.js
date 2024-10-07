@@ -294,5 +294,6 @@ module.exports = {
     getRider,
     getAllRiders,
     updateRider,
-    deleteRider
+    deleteRider,
+    getCustomerDistance,
 }

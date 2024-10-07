@@ -23,7 +23,7 @@ const customerLogin = async (req, res) => {
         let isUserExists = await customerModel.findOne({ userId });
 
         if (loginType === "PHONE") {
-            if (isUserExists && isUserExists.isNewUser === false && isUserExists.name && isUserExists.gender && isUserExists.isNewUser === false) {
+            if (isUserExists && isUserExists.isNewUser === false && isUserExists.name && isUserExists.gender) {
                 isUserExists.sessionToken = generateRandomAlphaNumericID(24);
                 await isUserExists.save();
                 SuccessResponse.data = isUserExists;
@@ -38,6 +38,7 @@ const customerLogin = async (req, res) => {
                 let newUser = await customerModel.create(userData);
                 SuccessResponse.data = newUser;
                 SuccessResponse.message = "user successfully authenticated";
+                SuccessResponse.success = true;
                 return res.status(StatusCodes.OK).send({ SuccessResponse });
             }
         } else if (loginType === "GMAIL") {
@@ -46,15 +47,18 @@ const customerLogin = async (req, res) => {
                 await isUserExists.save();
                 SuccessResponse.data = isUserExists;
                 SuccessResponse.message = "user already registered";
+                SuccessResponse.success = true;
                 return res.status(StatusCodes.OK).send({ SuccessResponse });
             } else if (isUserExists && isUserExists.isNewUser === true && isUserExists.email) {
                 SuccessResponse.data = isUserExists;
+                SuccessResponse.success = true;
                 SuccessResponse.message = "user already authenticated";
                 return res.status(StatusCodes.OK).send({ SuccessResponse });
             } else {
                 let userData = { userId, name, email, loginType };
                 let newUser = await customerModel.create(userData);
                 SuccessResponse.data = newUser;
+                SuccessResponse.success = true;
                 SuccessResponse.message = "user successfully authenticated";
                 return res.status(StatusCodes.OK).send({ SuccessResponse });
             }

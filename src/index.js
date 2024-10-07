@@ -16,6 +16,7 @@ app.use(fileUpload());
 app.use(cors());
 
 const adminRoutes = require("./routes/v1/adminRoutes");
+const categoryRoutes = require('./routes/v1/categoryRoutes');
 const restaurantRoutes = require("./routes/v1/restaurantRoutes");
 const productRoutes = require("./routes/v1/productRoutes");
 const riderRoutes = require("./routes/v1/riderRoutes");
@@ -27,6 +28,7 @@ app.use("/riderImages", express.static(__dirname + "/riderImages"));
 app.use("/productImages", express.static(__dirname + "/productImages"));
 
 app.use("/", adminRoutes);
+app.use("/", categoryRoutes);
 app.use("/", restaurantRoutes);
 app.use("/", riderRoutes);
 app.use("/", productRoutes);
