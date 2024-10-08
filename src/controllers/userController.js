@@ -10,7 +10,7 @@ const { port } = require("../config/config");
 const { isValidObjectId } = require("mongoose");
 
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
-const customerModel = require('../models/customerModel');
+// const customerModel = require('../models/customerModel');
 const { calculateDistance } = require('./restaurantController');
 const { 
     ok, 
@@ -24,9 +24,9 @@ const {
 let userImgFolder = path.join(__dirname, "..", "userImages");
 
 // ADD A USER
-const addUser = async (req, res) => {
+const authenticateUser = async (req, res) => {
     try {
-        let { userId, name, email, password, mobile, loginType, countryCode, code  } = req.body;
+        let { userId, name, email, mobile, loginType, countryCode, code  } = req.body;
         let isUserExists = await customerModel.findOne({ userId });
 
         if (loginType === "PHONE") {
@@ -83,18 +83,22 @@ const registerUser = async (req, res) => {
     try {
         const { userImages, registerModel } = req.body;
         let parsedData = JSON.parse(registerModel);
+
+        /** Following is the structure of data, which we have to pass in postman
+         * {"latitude": 12.9716,"longitude": 77.5946,"userId":"66f105dac517763d45079170"}
+         */
+        
         let userId = parsedData.userId;
 
         let user = await customerModel.findOne({ userId });
         if (!user) {
-            return res.status(notFound).send({
-                status: false,
-                message: "user not found"
-            });
+            ErrorResponse.message = "User is not authenticated, please authenticate the user first";
+            ErrorResponse.success = false;
+            return res.status(badRequest).send({ErrorResponse});
         } else if (user && user.isNewUser===true) {
             let imgObj = { filePath: "", fileName: ""};
             if ("profilePic" in req.body || (req.files && req.files.profilePic)) {
-                let { profilePic } = req.body;
+                let { profilePic } = req.files;
                 if (!profilePic) {
                     return res.status(badRequest).send({
                         status: false,
@@ -124,8 +128,8 @@ const registerUser = async (req, res) => {
             user.name = parsedData.name?? user.name;
             user.email = parsedData.email?? user.email;
             user.sessionToken = generateRandomAlphaNumericID(40);
-            user.coordinates.latitude = parsedData.coordinates.latitude?? user.coordinates.latitude;
-            user.coordinates.longitude = parsedData.coordinates.latitude?? user.coordinates.longitude;
+            user.coordinates.latitude = parsedData.latitude?? user.coordinates.latitude;
+            user.coordinates.longitude = parsedData.longitude?? user.coordinates.longitude;
             await user.save();
             SuccessResponse.data = user;
             SuccessResponse.success = true;
@@ -139,13 +143,10 @@ const registerUser = async (req, res) => {
             SuccessResponse.message = "user already registered";
             SuccessResponse.success = true;
             return res.status(ok).send({SuccessResponse});
-        } else {
-            ErrorResponse.message = "User is not authenticated, please authenticate the user first";
-            ErrorResponse.success = false;
-            return res.status(badRequest).send({ErrorResponse});
         };
 
     } catch (error) {
+        console.log(error);
         ErrorResponse.error = error;
         return res.status(internalServerError).send({ErrorResponse});
     }
@@ -153,6 +154,6 @@ const registerUser = async (req, res) => {
 
 
 module.exports = {
-    addUser,
+    authenticateUser,
     registerUser
 };
