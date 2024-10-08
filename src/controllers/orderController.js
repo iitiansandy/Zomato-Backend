@@ -188,6 +188,7 @@ const getAllOrdersOfARider = async (req, res) => {
         let riderOrderList = await orderModel.find({ rider_id: riderId, status: "Completed" });
         SuccessResponse.data = riderOrderList;
         SuccessResponse.message = "Rider order list fatched successfully";
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
         return res.status(internalServerError).send({ErrorResponse});

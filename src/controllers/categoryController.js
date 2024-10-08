@@ -3,7 +3,6 @@ let { getCurrentIPAddress } = require("../uitls/utils");
 const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
-const { StatusCodes } = require("http-status-codes");
 const { port } = require("../config/config");
 const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
