@@ -26,6 +26,9 @@ app.use("/customerImages", express.static(__dirname + "/customerImages"));
 app.use("/restaurantImages", express.static(__dirname + "/restaurantImages"));
 app.use("/riderImages", express.static(__dirname + "/riderImages"));
 app.use("/productImages", express.static(__dirname + "/productImages"));
+app.use("/banners", express.static(__dirname + "/banners"));
+app.use("/userImages", express.static(__dirname + "/userImages"));
+app.use("/categoryImages", express.static(__dirname + "/categoryImages"));
 
 app.use("/", adminRoutes);
 app.use("/", categoryRoutes);

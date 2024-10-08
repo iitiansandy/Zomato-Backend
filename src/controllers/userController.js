@@ -3,8 +3,6 @@ let { getCurrentIPAddress, generateRandomAlphaNumericID } = require("../uitls/ut
 const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
-const bcrypt = require('bcrypt');
-const { StatusCodes } = require("http-status-codes");
 const { port } = require("../config/config");
 // const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
@@ -97,7 +95,7 @@ const registerUser = async (req, res) => {
             ErrorResponse.success = false;
             return res.status(badRequest).send({ErrorResponse});
         } else if (user && user.isNewUser===true) {
-            let imgObj = { filePath: "", fileName: ""};
+            let imgObj = { filePath: "", fileName: "" };
             if ("profilePic" in req.body || (req.files && req.files.profilePic)) {
                 let { profilePic } = req.files;
                 if (!profilePic) {

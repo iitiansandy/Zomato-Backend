@@ -16,8 +16,8 @@ const createEarning = async (req, res) => {
             });
         }
 
-        if (!isValidObjectId(badRequest)) {
-            return res.status(400).send({
+        if (!isValidObjectId(deliveryId)) {
+            return res.status(badRequest).send({
                 status: false,
                 message: "Invalid deliveryId",
             });
