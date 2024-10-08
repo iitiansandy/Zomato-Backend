@@ -8,6 +8,7 @@ const {
     internalServerError,
     unauthorized,
     forbidden,
+    ok,
 } = require('../uitls/statusCodes');
 
 
@@ -39,7 +40,7 @@ const getDashboard = async (req, res) => {
         let categories = await categoryModel.find({});
         let bannerObj = await bannerImageModel.findOne();
         let banners = bannerObj.bannerImages;
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: "Success",
             categoryList: categories,
@@ -62,7 +63,7 @@ const getAdminDashboard = async (req, res) => {
         let bannerObj = await bannerImageModel.findOne();
         let bannerImages = bannerObj.bannerImages;
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: 'Success',
             bannerImages,
@@ -72,7 +73,7 @@ const getAdminDashboard = async (req, res) => {
     } catch (error) {
         console.log(error);
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -82,14 +83,14 @@ const addUpdateBanners = async (req, res) => {
     try {
         let { key } = req.params;
         if (!key) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'key is required'
             });
         };
 
         if (key !== adminSecretKey) {
-            return res.status(403).send({ status: false, message: "NOT AUTHORIZED!!!" });
+            return res.status(forbidden).send({ status: false, message: "NOT AUTHORIZED!!!" });
         };
 
         let bannerObj = await bannerImageModel.findOne();
@@ -104,7 +105,7 @@ const addUpdateBanners = async (req, res) => {
         let bannerImage = req.files.bannerImage;
 
         if (!bannerImage) {
-            return res.status(400).send({ status: false, message: "No banner image uploaded" });
+            return res.status(badRequest).send({ status: false, message: "No banner image uploaded" });
         };
 
         if (!fs.existsSync(bannerFolder)) {
@@ -144,7 +145,7 @@ const addUpdateBanners = async (req, res) => {
 
             let bannerImages = bannerObj.bannerImages;
 
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Banner updated successfully",
                 data: bannerImages,
@@ -163,7 +164,7 @@ const addUpdateBanners = async (req, res) => {
 
             let bannerImages = bannerObj.bannerImages;
 
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Banner added successfully",
                 data: bannerImages,
@@ -171,7 +172,7 @@ const addUpdateBanners = async (req, res) => {
         };
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -181,20 +182,20 @@ const deleteBannerImage = async (req, res) => {
     try {
         let { key, imgId } = req.params;
         if (!key || !imgId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "key and imgId are required"
             });
         };
 
         if (key !== adminSecretKey) {
-            return res.status(403).send({ status: false, message: "NOT AUTHORIZED!!!" });
+            return res.status(forbidden).send({ status: false, message: "NOT AUTHORIZED!!!" });
         };
 
         let bannerObj = await bannerImageModel.findOne();
 
         if (!bannerObj) {
-            return res.status(400).send({ status: false, message: "Not Found!!!" });
+            return res.status(badRequest).send({ status: false, message: "Not Found!!!" });
         };
 
         if (bannerObj.bannerImages.length) {
@@ -218,14 +219,14 @@ const deleteBannerImage = async (req, res) => {
 
         let bannerImages = bannerObj.bannerImages;
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: "Banner image deleted successfully",
             data: bannerImages,
         });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 

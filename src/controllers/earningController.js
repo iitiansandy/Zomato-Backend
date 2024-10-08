@@ -2,6 +2,7 @@ const earningModel = require("../models/earningModel");
 const deliveryModel = require("../models/deliveryModel");
 const riderModel = require("../models/riderModel");
 const orderModel = require("../models/orderModel");
+const { badRequest, ok, internalServerError } = require('../uitls/statusCodes');
 
 // CREATE EARNING DATA
 const createEarning = async (req, res) => {
@@ -9,13 +10,13 @@ const createEarning = async (req, res) => {
         const { deliveryId } = req.params;
 
         if (!deliveryId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "deliveryId is required",
             });
         }
 
-        if (!isValidObjectId(deliveryId)) {
+        if (!isValidObjectId(badRequest)) {
             return res.status(400).send({
                 status: false,
                 message: "Invalid deliveryId",
@@ -24,7 +25,7 @@ const createEarning = async (req, res) => {
 
         let delivery = await deliveryModel.findById(deliveryId);
         if (!delivery) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "No delivery found with given delivery id",
             });
@@ -35,10 +36,10 @@ const createEarning = async (req, res) => {
         let newEarning = await earningModel.create(earningData);
         SuccessResponse.data = newEarning;
         SuccessResponse.message = "Rider earning added successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -53,10 +54,10 @@ const getAllEarning = async (req, res) => {
         let data = { allDeliveries, totalEarning };
         SuccessResponse.data = data;
         SuccessResponse.message = "All rider's earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -65,7 +66,7 @@ const getAllEarningOfARider = async (req, res) => {
     try {
         let { riderId } = req.params;
         if (!riderId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "Rider Id is required",
             });
@@ -78,10 +79,10 @@ const getAllEarningOfARider = async (req, res) => {
         let data = { riderDeliveries, totalEarning };
         SuccessResponse.data = data;
         SuccessResponse.message = "Rider earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -110,10 +111,10 @@ const getRiderOneDayEarning = async (req, res) => {
         let data = { oneDayDeliveries: deliveries, oneDayEarning: grandTotal };
         SuccessResponse.data = data;
         SuccessResponse.message = "Rider's one day earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -151,10 +152,10 @@ const getRiderOneMonthEarning = async (req, res) => {
         let data = { oneMonthDeliveries: deliveries, oneMonthEarning: grandTotal };
         SuccessResponse.data = data;
         SuccessResponse.message = "Rider's one month earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -192,10 +193,10 @@ const getRiderOneYearEarning = async (req, res) => {
         let data = { oneYearDeliveries: deliveries, oneYearEarning: grandTotal };
         SuccessResponse.data = data;
         SuccessResponse.message = "Rider's one year earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -237,10 +238,10 @@ const getRiderOneWeekEarning = async (req, res) => {
         let data = { oneWeekDeliveries: deliveries, oneWeekEarning: grandTotal };
         SuccessResponse.data = data;
         SuccessResponse.message = "Rider's one week earning fetched successfully";
-        return res.status(StatusCodes.OK).send({ SuccessResponse });
+        return res.status(ok).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 

@@ -17,7 +17,8 @@ const {
     internalServerError,
     badRequest,
     notFound,
-    created
+    created,
+    unauthorized
 } = require('../uitls/statusCodes');
 
 
@@ -46,9 +47,9 @@ const authenticateUser = async (req, res) => {
                 let userData = { userId, name, mobile, loginType, countryCode, code };
                 let newUser = await customerModel.create(userData);
                 SuccessResponse.data = newUser;
-                SuccessResponse.message = "user authenticated authenticated";
+                SuccessResponse.message = "user authenticated successfully";
                 SuccessResponse.success = true;
-                return res.status(ok).send({ SuccessResponse });
+                return res.status(created).send({ SuccessResponse });
             }
         } else if (loginType === "EMAIL") {
             if (isUserExists && isUserExists.isNewUser === false && isUserExists.name && isUserExists.gender) {
@@ -68,7 +69,7 @@ const authenticateUser = async (req, res) => {
                 SuccessResponse.data = newUser;
                 SuccessResponse.success = true;
                 SuccessResponse.message = "user authenticated successfully";
-                return res.status(ok).send({SuccessResponse});
+                return res.status(created).send({SuccessResponse});
             }
         }
     } catch (error) {
@@ -125,11 +126,18 @@ const registerUser = async (req, res) => {
             };
 
             user.profilePic = imgObj;
+            if (user.profilePic.fileName && user.profilePic.filePath) {
+                user.isVerifiedUser = true;
+            };
             user.name = parsedData.name?? user.name;
             user.email = parsedData.email?? user.email;
             user.sessionToken = generateRandomAlphaNumericID(40);
             user.coordinates.latitude = parsedData.latitude?? user.coordinates.latitude;
             user.coordinates.longitude = parsedData.longitude?? user.coordinates.longitude;
+            user.pronoun = parsedData.pronoun;
+            user.address = parsedData.address;
+            user.gender = parsedData.gender;
+            user.isNewUser = false;
             await user.save();
             SuccessResponse.data = user;
             SuccessResponse.success = true;
@@ -153,7 +161,165 @@ const registerUser = async (req, res) => {
 };
 
 
+// GET ALL USERS
+const getAllUsers = async (req, res) => {
+    try {
+        let allUsers = await customerModel.find({});
+        SuccessResponse.data = allUsers;
+        return res.status(ok).send({SuccessResponse});
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.error = error;
+        return res.status(internalServerError).send({ErrorResponse});
+    }
+};
+
+
+// UPDATE USER
+const updateUser = async (req, res) => {
+    try {
+        let { userId } = req.params;
+        if (!userId) {
+            return res.status(badRequest).send({
+                status: false,
+                message: "userId is required"
+            });
+        };
+
+        let u = await customerModel.findOne({ userId });
+        if (!u) {
+            return res.status(notFound).send({
+                status: false,
+                message: "user not found"
+            });
+        };
+
+        let e = req.body;
+        if ("name" in e) {
+            u.name = e.name;
+        };
+
+        if ("email" in e) {
+            if (u.loginType==="PHONE") {
+                u.email = e.email;
+            } else {
+                return res.status(unauthorized).send({
+                    status: false,
+                    message: 'You cannot change your email as you loggedin through your email'
+                })
+            }
+        };
+
+        if ("mobile" in e) {
+            if (u.loginType==="EMAIL") {
+                u.mobile = e.mobile;
+            } else {
+                return res.status(unauthorized).send({
+                    status: false,
+                    message: 'You cannot change your mobile number as you loggedin through it'
+                })
+            }
+        };
+
+        if ("address" in e) {
+            u.address = e.address;
+        };
+
+        if ("gender" in e) {
+            u.gender = e.gender;
+        };
+
+        if ("pronoun" in e) {
+            u.pronoun = e.pronoun;
+        };
+
+        if ("profilePic" in req.body || (req.files && req.files.profilePic)) {
+            let oldImgName = u.profilePic.fileName;
+            if (oldImgName) {
+                let oldImgPath = path.join(userImgFolder, oldImgName);
+                if (fs.existsSync(oldImgPath)) {
+                    fs.unlinkSync(oldImgPath);
+                };
+            };
+
+            let { profilePic } = req.files;
+            if (!profilePic) {
+                return res.status(badRequest).send({
+                    status: false,
+                    message: 'Please upload the profile pic'
+                });
+            };
+
+            let currentIpAddress = getCurrentIPAddress();
+            let imgRelativePath = "/userImages/";
+            let fileName = uuid.v4() + "." + profilePic.name.split(".").pop();
+            let filePath = `http://${currentIpAddress}:${port}${imgRelativePath}`;
+            let imgSavingPath = path.join(userImgFolder, fileName);
+
+            await profilePic.mv(imgSavingPath);
+
+            let updatedProfilePic = { fileName, filePath };
+            u.profilePic = updatedProfilePic;
+        };
+
+        await u.save();
+
+        SuccessResponse.data = u;
+        return res.status(ok).send({SuccessResponse});
+
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.error = error;
+        return res.status(internalServerError).send({ErrorResponse});
+    }
+};
+
+
+// DELETE USER
+const deleteUser = async (req, res) => {
+    try {
+        let { userId } = req.params;
+        if (!userId) {
+            return res.status(badRequest).send({
+                status: false,
+                message: 'userId is required'
+            });
+        };
+
+        let user = await customerModel.findOne({ userId });
+        if (!user) {
+            return res.status(notFound).send({
+                status: false,
+                message: 'User not found'
+            });
+        };
+
+        let oldImgName = user.profilePic.fileName;
+        if (oldImgName) {
+            let oldImgPath = path.join(userImgFolder, oldImgName);
+            if (fs.existsSync(oldImgPath)) {
+                fs.unlinkSync(oldImgPath);
+            };
+        };
+
+        await customerModel.findOneAndDelete({ userId });
+
+        return res.status(ok).send({
+            status: true,
+            message: 'User deleted successfully'
+        });
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.error = error;
+        return res.status(internalServerError).send({ErrorResponse});
+    }
+};
+
+
 module.exports = {
     authenticateUser,
-    registerUser
+    registerUser,
+    getAllUsers,
+    updateUser,
+    deleteUser
 };

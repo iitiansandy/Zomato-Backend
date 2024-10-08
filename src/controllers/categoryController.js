@@ -7,6 +7,7 @@ const { StatusCodes } = require("http-status-codes");
 const { port } = require("../config/config");
 const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
+const { badRequest, created, internalServerError, ok, notFound } = require('../uitls/statusCodes');
 
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 
@@ -20,7 +21,7 @@ const addCategory = async (req, res) => {
         let { category_image } = req.files;
 
         if (!category_image) {
-            return res.status(400).send({ status: false, message: "No category Image uploaded" });
+            return res.status(badRequest).send({ status: false, message: "No category Image uploaded" });
         };
 
         if (!fs.existsSync(catImgFolder)) {
@@ -48,10 +49,10 @@ const addCategory = async (req, res) => {
 
         let newCategory = await categoryModel.create(categoryObj);
         SuccessResponse.data = newCategory;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -65,7 +66,7 @@ const getRestaurantByKeywords  = async (req, res) => {
         if (categoryId) {
             let restaurants = await restaurantModel.find({ categoryId });
 
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Success",
                 data: restaurants,
@@ -86,7 +87,7 @@ const getRestaurantByKeywords  = async (req, res) => {
     
             let restaurants = await restaurantModel.find(filter);
     
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Success",
                 data: restaurants,
@@ -94,7 +95,7 @@ const getRestaurantByKeywords  = async (req, res) => {
         }
         
     } catch (error) {
-        return res.status(400).send({ status: false, message: error.message });
+        return res.status(internalServerError).send({ status: false, message: error.message });
     }
 };
 
@@ -104,10 +105,10 @@ const getAllCategories = async (req, res) => {
     try {
         let categories = await categoryModel.find({});
         SuccessResponse.data = categories;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -117,17 +118,17 @@ const updateCategory = async (req, res) => {
     try {
         let { categoryId } = req.params;
         if (!categoryId) {
-            return res.status(400).send({ status: false, message: "Category Id is required" });
+            return res.status(badRequest).send({ status: false, message: "Category Id is required" });
         };
 
         if (!isValidObjectId(categoryId)) {
-            return res.status(400).send({ status: false, message: "Invalid Category Id" });
+            return res.status(badRequest).send({ status: false, message: "Invalid Category Id" });
         };
 
         let category = await categoryModel.findById(categoryId);
 
         if (!category) {
-            return res.status(404).send({ status: false, message: "Category Not Found" });
+            return res.status(notFound).send({ status: false, message: "Category Not Found" });
         };
 
         let reqBody = req.body;
@@ -143,7 +144,7 @@ const updateCategory = async (req, res) => {
         if ("category_image" in reqBody || (req.files && req.files.category_image)) {
             let category_image = req.files.category_image;
             if (!category_image) {
-                return res.status(400).send({ status: false, message: "No category images uploaded" });
+                return res.status(badRequest).send({ status: false, message: "No category images uploaded" });
             };
 
             let currentIpAddress = getCurrentIPAddress();
@@ -172,13 +173,13 @@ const updateCategory = async (req, res) => {
 
         await category.save();
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: "Category updated successfully",
             data: category,
         });
     } catch (error) {
-        return res.status(400).send({ status: false, message: error.message });
+        return res.status(internalServerError).send({ status: false, message: error.message });
     };
 };
 
@@ -188,13 +189,13 @@ const deleteCategory = async (req, res) => {
     try {
         let { categoryId } = req.params;
         if (!categoryId) {
-            return res.status(400).send({ status: false, message: "CategoryId is required" });
+            return res.status(badRequest).send({ status: false, message: "CategoryId is required" });
         };
 
         let category = await categoryModel.findById(categoryId);
 
         if (!category) {
-            return res.status(404).send({ status: false, message: "No category found with this category Id"})
+            return res.status(notFound).send({ status: false, message: "No category found with this category Id"})
         };
 
         let oldImgName = category.category_image.fileName;
@@ -207,12 +208,12 @@ const deleteCategory = async (req, res) => {
 
         await categoryModel.deleteOne({ _id: categoryId });
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: "Category deleted successfully",
         });
     } catch (error) {
-        return res.status(400).send({ status: false, message: error.message });
+        return res.status(internalServerError).send({ status: false, message: error.message });
     };
 };
 

@@ -2,8 +2,8 @@ const adminModel = require('../models/adminModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { tokenSecretKey } = require('../config/config');
-
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
+const { badRequest, created, internalServerError, unauthorized, ok } = require('../uitls/statusCodes');
 
 
 // ADD ADMIN
@@ -12,7 +12,7 @@ const createAdmin = async (req, res) => {
         let { name, email, password, mobile, role } = req.body;
 
         if (!name || !email || !password || !mobile || !role) {
-            return res.status(400).send({ status: false, message: "All fields are required"});
+            return res.status(badRequest).send({ status: false, message: "All fields are required"});
         };
 
         let hashedPassward = await bcrypt.hash(password, 10);
@@ -33,10 +33,10 @@ const createAdmin = async (req, res) => {
         let newAdmin = await adminModel.create(adminObj);
         SuccessResponse.data = newAdmin;
         SuccessResponse.message = "Super Admin created successfully";
-        return res.status(201).send({ SuccessResponse });
+        return res.status(created).send({ SuccessResponse });
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -47,18 +47,18 @@ const adminLogin = async (req, res) => {
         let { email, password } = req.body;
 
         if (!email || !password) {
-            return res.status(400).send({ status: false, message: "Email and password are required"});
+            return res.status(badRequest).send({ status: false, message: "Email and password are required"});
         };
 
         let admin = await adminModel.findOne({ email, isSuperAdmin: true });
         if (!admin) {
-            return res.status(400).send({ status: false, message: 'Invalid credentials'});
+            return res.status(badRequest).send({ status: false, message: 'Invalid credentials'});
         };
 
         // Using async/await for bcrypt comparison
         const isPasswordValid = await bcrypt.compare(password, admin.password);
         if (!isPasswordValid) {
-            return res.status(401).send({ status: false, message: 'Access denied' });
+            return res.status(unauthorized).send({ status: false, message: 'Access denied' });
         }
 
         let date = Date.now();
@@ -81,17 +81,17 @@ const adminLogin = async (req, res) => {
         // Correct way to set the token in the Authorization header
         res.setHeader("Authorization", `Bearer ${token}`);
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: "Success",
             data
         });
     } catch (error) {
-        return res.status(500).send({ status: false, message: error.message });
+        return res.status(internalServerError).send({ status: false, message: error.message });
     }
-}
+};
 
 module.exports = {
     createAdmin,
     adminLogin
-}
+};

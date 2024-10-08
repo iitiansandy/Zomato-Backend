@@ -8,9 +8,8 @@ const { StatusCodes } = require("http-status-codes");
 const { port } = require("../config/config");
 const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
-
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
-
+const { badRequest, internalServerError, notFound, ok } = require('../uitls/statusCodes');
 
 // CREATE ORDER
 const createOrder = async (req, res) => {
@@ -34,14 +33,14 @@ const createOrder = async (req, res) => {
             let { itemId, item_name, quantity, one_qty_price, imgUrl, isVeg, isTaxable, order_date } = itemData;
 
             if (!isValidInteger(quantity)) {
-                return res.status(400).send({
+                return res.status(badRequest).send({
                     status: false,
                     message: "Invalid quantity, please provide a valid quantity",
                 });
             }
 
             if (!isValidInteger(one_qty_price)) {
-                return res.status(400).send({
+                return res.status(badRequest).send({
                     status: false,
                     message: "Invalid one_qty_price, please provide a valid one_qty_price",
                 });
@@ -90,10 +89,10 @@ const createOrder = async (req, res) => {
         let newOrder = await orderModel.create(orderData);
         SuccessResponse.data = newOrder;
         SuccessResponse.message = "order created successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -103,14 +102,14 @@ const getOrder = async (req, res) => {
     try {
         let { orderId } = req.params;
         if (!orderId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'order id is required'
             });
         };
 
         if (!isValidObjectId(orderId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid order id'
             });
@@ -118,7 +117,7 @@ const getOrder = async (req, res) => {
 
         let order = await orderModel.findById(orderId);
         if (!order) {
-            return res.status(400).send({
+            return res.status(notFound).send({
                 status: false,
                 message: 'No order found with given order id'
             });
@@ -126,10 +125,10 @@ const getOrder = async (req, res) => {
 
         SuccessResponse.data = order;
         SuccessResponse.message = "order fatched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -140,10 +139,10 @@ const getCompletedOrderList = async (req, res) => {
         let orders = await orderModel.find({ status: "Completed" });
         SuccessResponse.data = orders;
         SuccessResponse.message = "Completed order list fatched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internal).send({ErrorResponse});
     }
 };
 
@@ -154,10 +153,10 @@ const getCancelledOrderList = async (req, res) => {
         let orders = await orderModel.find({ status: "Cancelled" });
         SuccessResponse.data = orders;
         SuccessResponse.message = "Cancelled order list fatched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -168,10 +167,10 @@ const getAllPendingOrders = async (req, res) => {
         let orders = await orderModel.find({ status: "Pending" });
         SuccessResponse.data = orders;
         SuccessResponse.message = "Pending order list fatched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 }
 
@@ -181,7 +180,7 @@ const getAllOrdersOfARider = async (req, res) => {
     try {
         let { riderId } = req.params;
         if (!riderId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Rider Id is required'
             });
@@ -192,7 +191,7 @@ const getAllOrdersOfARider = async (req, res) => {
         SuccessResponse.message = "Rider order list fatched successfully";
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 }
 
@@ -202,14 +201,14 @@ const updateOrder = async (req, res) => {
     try {
         let { orderId, itemId } = req.params;
         if (!orderId || !itemId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'order id and item id is required'
             });
         };
 
         if (!isValidObjectId(orderId) || !isValidObjectId(itemId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid order id or item id'
             });
@@ -217,7 +216,7 @@ const updateOrder = async (req, res) => {
 
         let o = await orderModel.findById(orderId);
         if (!o) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'No order found with given order id'
             });
@@ -282,10 +281,10 @@ const updateOrder = async (req, res) => {
         await o.save();
         SuccessResponse.data = o;
         SuccessResponse.message = "order updated successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -295,14 +294,14 @@ const updateOrderStatus = async (req, res) => {
     try {
         let { orderId, riderId } = req.params;
         if (!orderId || !riderId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'orderId and riderId is required'
             });
         };
 
         if (!isValidObjectId(orderId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'orderId is not a valid mongodb id'
             });
@@ -310,7 +309,7 @@ const updateOrderStatus = async (req, res) => {
 
         let order = await orderModel.findById(orderId);
         if (!order) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'order not found'
             });
@@ -320,10 +319,10 @@ const updateOrderStatus = async (req, res) => {
         await order.save();
         SuccessResponse.data = order;
         SuccessResponse.message = "order status successfully updated by rider";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -333,14 +332,14 @@ const deleteOrder = async (req, res) => {
     try {
         let { orderId } = req.params;
         if (!orderId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'order id is required'
             });
         };
 
         if (!isValidObjectId(orderId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid order id'
             });
@@ -348,17 +347,17 @@ const deleteOrder = async (req, res) => {
 
         let deletedOrder = await orderModel.findOneAndDelete({ _id: orderId });
         if (!deletedOrder) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Order not found or already deleted'
             });
         };
 
         SuccessResponse.message = "order deleted successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -368,7 +367,7 @@ const getAllOrdersOfARestaurant = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "restaurantId is required",
             });
@@ -377,10 +376,10 @@ const getAllOrdersOfARestaurant = async (req, res) => {
         let restaurantOrders = await orderModel.find({ restaurant_id: restaurantId });
         SuccessResponse.data = restaurantOrders;
         SuccessResponse.message = "orders fetched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -391,7 +390,7 @@ const getAllOrdersOfACustomer = async (req, res) => {
         const { customerId } = req.params;
 
         if (!customerId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "customerId is required",
             });
@@ -400,10 +399,10 @@ const getAllOrdersOfACustomer = async (req, res) => {
         let orders = await orderModel.find({ customer_id: customerId });
         SuccessResponse.data = orders;
         SuccessResponse.message = "orders fetched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
