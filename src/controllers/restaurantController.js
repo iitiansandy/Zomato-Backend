@@ -9,6 +9,7 @@ const { isValidObjectId } = require("mongoose");
 let { getCurrentIPAddress, generateRandomAlphaNumericID } = require("../uitls/utils");
 let { port, adminSecretKey } = require("../config/config");
 const { ErrorResponse, SuccessResponse } = require('../uitls/common');
+const { created, internalServerError, badRequest, ok, notFound } = require('../uitls/statusCodes');
 
 
 // function to calculate the distance between two sets of latitude and longitude coordinates
@@ -24,6 +25,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     let roundedDistance = parseFloat(d);
     return roundedDistance;
 };
+
+
+const restImgFolder = path.join(__dirname, "..", "restaurantImages");
+let bannerFolder = path.join(__dirname, "..", "banners");
 
 
 // ADD RESTAURANT
@@ -97,10 +102,10 @@ const addRestaurant = async (req, res) => {
         let restaurant = await restaurantModel.create(resData);
         SuccessResponse.data = restaurant;
         SuccessResponse.message = "Restaurant added successfully";
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -110,13 +115,13 @@ const addUpdateRestaurantBanners = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({ 
+            return res.status(badRequest).send({ 
                 status: false, 
                 message: "Bad Request!!!" 
             });
         };
         if (!isValidObjectId(restaurantId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid restaurantId'
             });
@@ -130,15 +135,17 @@ const addUpdateRestaurantBanners = async (req, res) => {
         let bannerImage = req.files.bannerImage;
 
         if (!bannerImage) {
-            return res.status(StatusCodes.BAD_REQUEST).send({ status: false, message: "No banner image uploaded" });
-        }
+            return res.status(badRequest).send({ 
+                status: false, 
+                message: "No banner image uploaded" 
+            });
+        };
 
         let index = parsedData.index; //{"isNewPick":false,"index":1,"img_id":"64ffebc1f3bfc5d77220193b","imageName":"1694493633669-432139964.jpg"}
         let img_id = parsedData.img_id ? parsedData.img_id : "";
         let imageName = parsedData.imageName;
         let isNewPick = parsedData.isNewPick;
 
-        let bannerFolder = path.join(__dirname, "..", "banners");
         if (!fs.existsSync(bannerFolder)) {
             fs.mkdirSync(bannerFolder);
         };
@@ -147,12 +154,12 @@ const addUpdateRestaurantBanners = async (req, res) => {
         let imgRelativePath = "/banners/";
         let imgUniqName = uuid.v4() + "." + bannerImage.name.split(".").pop();
         let imgFullUrl = `http://${currentIpAddress}:${port}${imgRelativePath}`;
-        let imgSavingPath = path.join(__dirname, "..", "banners", imgUniqName);
+        let imgSavingPath = path.join(bannerFolder, imgUniqName);
 
         if (!isNewPick) {
             let oldImg = restaurant.banners[index].fileName;
             if (oldImg) {
-                let oldImgPath = path.join(__dirname, "..", "banners", oldImg);
+                let oldImgPath = path.join(bannerFolder, oldImg);
                 if (fs.existsSync(oldImgPath)) {
                     fs.unlinkSync(oldImgPath);
                 }
@@ -167,7 +174,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
 
             restaurant.banners[index] = imgObj;
             await restaurant.save();
-            return res.status(StatusCodes.OK).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Banner updated successfully",
                 data: restaurant.banners,
@@ -182,7 +189,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
 
             restaurant.banners.push(imgObj);
             await restaurant.save();
-            return res.status(StatusCodes.OK).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Banner added successfully",
                 data: restaurant.banners,
@@ -190,7 +197,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
         };
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -201,14 +208,14 @@ const deleteBanner = async (req, res) => {
         let { restId, imgId } = req.params;
         if (!restId || !imgId) {
             ErrorResponse.message = 'Rest Id and Image Id are required';
-            return res.status(StatusCodes.BAD_REQUEST).send({ErrorResponse});
+            return res.status(badRequest).send({ErrorResponse});
         };
 
         let rest = await restaurantModel.findById(restId);
 
         if (!rest) {
             ErrorResponse.message = `No restaurant found with this restaurant id: ${restId}`;
-            return res.status(StatusCodes.NOT_FOUND).send({ErrorResponse});
+            return res.status(notFound).send({ErrorResponse});
         };
 
         let arr = rest.banners;
@@ -243,10 +250,10 @@ const getAllRestaurants = async (req, res) => {
     try {
         let allRestaurants = await restaurantModel.find({});
         SuccessResponse.data = allRestaurants;
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -256,30 +263,30 @@ const getRestaurantById = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({ 
+            return res.status(badRequest).send({ 
                 status: false, 
                 message: "Bad Request!!!" 
             });
         };
         if (!isValidObjectId(restaurantId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid restaurantId'
             });
         };
         let restaurant = await restaurantModel.findById(restaurantId);
         if (!restaurant) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: `No restaurant found with this id: ${restaurantId}`
             });
         };
         SuccessResponse.data = restaurant;
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
 
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -289,20 +296,20 @@ const updateRestaurant = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({ 
+            return res.status(badRequest).send({ 
                 status: false, 
                 message: "Bad Request!!!" 
             });
         };
         if (!isValidObjectId(restaurantId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid restaurantId'
             });
         };
         let r = await restaurantModel.findById(restaurantId);
         if (!r) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: `No restaurant found with this id: ${restaurantId}`
             });
@@ -402,10 +409,10 @@ const updateRestaurant = async (req, res) => {
         await r.save();
 
         SuccessResponse.data = r;
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -415,13 +422,13 @@ const deleteRestaurant = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(StatusCodes.BAD_REQUEST).send({ 
+            return res.status(badRequest).send({ 
                 status: false, 
                 message: "Bad Request!!!" 
             });
         };
         if (!isValidObjectId(restaurantId)) {
-            return res.status(StatusCodes.BAD_REQUEST).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid restaurantId'
             });
@@ -429,7 +436,7 @@ const deleteRestaurant = async (req, res) => {
 
         let r = await restaurantModel.findById(restaurantId);
         if (!r) {
-            return res.status(StatusCodes.NOT_FOUND).send({
+            return res.status(notFound).send({
                 status: false,
                 message: `No restaurant found with this id: ${restaurantId}`
             });
@@ -450,11 +457,11 @@ const deleteRestaurant = async (req, res) => {
 
         await restaurantModel.findOneAndDelete({ _id: restaurantId });
         SuccessResponse.message = "Restaurant deleted successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
 
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -467,7 +474,7 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
 
         let arr = ["BY_LOCATION", "BY_ADDRESS", "BY_KEYWORDS"];
         if (!arr.includes(searchType)) {
-            return res.status(200).send({
+            return res.status(badRequest).send({
                 status: true,
                 message: "searchType can be only 'BY_LOCATION', 'BY_ADDRESS' OR 'BY_KEYWORDS' "
             });
@@ -514,7 +521,7 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
             };
 
             restaurantArr.sort((a, b) => a.distance - b.distance);
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "success",
                 data: restaurantArr,
@@ -539,7 +546,7 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
 
             let restaurants = await restaurantModel.find(filter);
 
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Success",
                 data: restaurants,
@@ -555,7 +562,7 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
 
             let restaurants = await restaurantModel.find(filter);
 
-            return res.status(200).send({
+            return res.status(ok).send({
                 status: true,
                 message: "Success",
                 data: restaurants,
@@ -563,7 +570,7 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
         }
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 

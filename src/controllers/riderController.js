@@ -12,6 +12,7 @@ const { isValidObjectId } = require("mongoose");
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 const customerModel = require('../models/customerModel');
 const { calculateDistance } = require('./restaurantController');
+const { badRequest, created, internalServerError, notFound, ok } = require('../uitls/statusCodes');
 
 
 let riderImgFolder = path.join(__dirname, "..", "riders");
@@ -34,7 +35,7 @@ const addRider = async (req, res) => {
         if ("profilePic" in req.body || (req.files && req.files.profilePic)) {
             let { profilePic } = req.files;
             if (!profilePic) {
-                return res.status(400).send({
+                return res.status(badRequest).send({
                     status: false,
                     message: 'No profilePic uploaded'
                 })
@@ -68,10 +69,10 @@ const addRider = async (req, res) => {
         };
         let newRider = await riderModel.create(riderData);
         SuccessResponse.data = newRider;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -82,20 +83,20 @@ const getRider = async (req, res) => {
         let { riderId } = req.params;
         if (!riderId) {
             ErrorResponse.message = "rider Id is required";
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+            return res.status(badRequest).send({ ErrorResponse });
         };
 
         let r = await riderModel.findById(riderId);
         if (!r) {
             ErrorResponse.message = "rider not found";
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+            return res.status(notFound).send({ ErrorResponse });
         };
 
         SuccessResponse.data = r;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -105,10 +106,10 @@ const getAllRiders = async (req, res) => {
     try {
         let allRiders = await riderModel.find({});
         SuccessResponse.data = allRiders;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -119,13 +120,13 @@ const updateRider = async (req, res) => {
         let { riderId } = req.params;
         if (!riderId) {
             ErrorResponse.message = "rider Id is required";
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+            return res.status(badRequest).send({ ErrorResponse });
         };
 
         let r = await riderModel.findById(riderId);
         if (!r) {
             ErrorResponse.message = "rider not found";
-            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+            return res.status(badRequest).send({ ErrorResponse });
         };
 
         let e = req.body;
@@ -173,7 +174,7 @@ const updateRider = async (req, res) => {
 
             let { profilePic } = req.files;
             if (!profilePic) {
-                return res.status(400).send({
+                return res.status(badRequest).send({
                     status: false,
                     message: 'No profilePic uploaded'
                 })
@@ -198,10 +199,10 @@ const updateRider = async (req, res) => {
         await r.save();
         
         SuccessResponse.data = r;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -212,13 +213,13 @@ const deleteRider = async (req, res) => {
         let { riderId } = req.params;
         if (!riderId) {
             ErrorResponse.message = "rider Id is required";
-            return res.status(StatusCodes.BAD_REQUEST).send({ ErrorResponse });
+            return res.status(badRequest).send({ ErrorResponse });
         };
 
         let r = await riderModel.findById(riderId);
         if (!r) {
             ErrorResponse.message = "rider not found";
-            return res.status(StatusCodes.NOT_FOUND).send({ ErrorResponse });
+            return res.status(notFound).send({ ErrorResponse });
         };
 
         let oldImgName = r.profilePic.fileName;
@@ -229,10 +230,10 @@ const deleteRider = async (req, res) => {
             };
         };
         SuccessResponse.message = "Rider deleted successfully";
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -242,7 +243,7 @@ const getCustomerDistance = async (req, res) => {
     try {
         let { customerId } = req.params;
         if (!customerId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Customer Id is required'
             });
@@ -250,7 +251,7 @@ const getCustomerDistance = async (req, res) => {
 
         let customer = await customerModel.findOne({ userId: customerId });
         if (!customer) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'No customer found with the given customerId'
             });
@@ -261,7 +262,7 @@ const getCustomerDistance = async (req, res) => {
         let rider = await riderModel.findById(riderId);
 
         if (!rider) {
-            return res.status(400).send({
+            return res.status(notFound).send({
                 status: false,
                 message: 'No rider found with the given riderId'
             });
@@ -275,7 +276,7 @@ const getCustomerDistance = async (req, res) => {
             distance = calculateDistance(e.latitude, e.longitude, r.latitude, r.longitude);
         };
 
-        return res.status(200).send({
+        return res.status(ok).send({
             status: true,
             message: 'Success',
             data: distance
@@ -284,7 +285,7 @@ const getCustomerDistance = async (req, res) => {
 
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 }
 

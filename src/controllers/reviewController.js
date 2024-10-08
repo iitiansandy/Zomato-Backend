@@ -2,6 +2,7 @@ const reviewModel = require('../models/reviewModel');
 const customerModel = require('../models/reviewModel');
 const restaurantModel = require('../models/restaurantModel');
 const { ErrorResponse, SuccessResponse } = require('../uitls/common');
+const { ok, created, badRequest, notFound, unauthorized, forbidden, internalServerError } = require('../uitls/statusCodes');
 const { isValidObjectId } = require('mongoose');
 
 // ADD REVIEW TO A RESTAURANT
@@ -10,7 +11,7 @@ const addReview = async (req, res) => {
         const { customerId } = req.params;
 
         if (!customerId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "customerId is required",
             });
@@ -18,7 +19,7 @@ const addReview = async (req, res) => {
 
         let isReviewAlreadyExists = await reviewModel.findOne({ customerId, restaurantId });
         if (isReviewAlreadyExists) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "Customer's review already exists for given restaurant"
             })
@@ -43,10 +44,10 @@ const addReview = async (req, res) => {
         let newReview = await reviewModel.create(reviewData);
         SuccessResponse.data = newReview;
         SuccessResponse.message = "Review added successfully";
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(created).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -56,7 +57,7 @@ const getAllReviewsOfARestaurant = async (req, res) => {
     try {
         let { restaurantId } = req.params;
         if (!restaurantId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "restaurantId is required",
             });
@@ -64,10 +65,10 @@ const getAllReviewsOfARestaurant = async (req, res) => {
         let reviewList = await reviewModel.find({ restaurantId });
         SuccessResponse.data = reviewList;
         SuccessResponse.message = "Review list fetched successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -77,14 +78,14 @@ const updateReview = async (req, res) => {
     try {
         let { reviewId } = req.params;
         if (!reviewId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "reviewId is required",
             });
         };
 
         if (!isValidObjectId(reviewId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "Invalid reviewId",
             });
@@ -92,7 +93,7 @@ const updateReview = async (req, res) => {
 
         let r = await reviewModel.findById(reviewId);
         if (!r) {
-            return res.status(400).send({
+            return res.status(notFound).send({
                 status: false,
                 message: "review not found",
             });
@@ -109,10 +110,10 @@ const updateReview = async (req, res) => {
         };
         SuccessResponse.data = r;
         SuccessResponse.message = "Review updated successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -122,14 +123,14 @@ const deleteReview = async (req, res) => {
     try {
         let { reviewId } = req.params;
         if (!reviewId) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "reviewId is required",
             });
         };
 
         if (!isValidObjectId(reviewId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "Invalid reviewId",
             });
@@ -138,17 +139,17 @@ const deleteReview = async (req, res) => {
         let deletedReview = await reviewModel.findOneAndDelete({ _id: reviewId });
 
         if (!deletedReview) {
-            return res.status(400).send({
+            return res.status(notFound).send({
                 status: false,
                 message: "review not found or already deleted",
             });
         };
         
         SuccessResponse.message = "Review deleted successfully";
-        return res.status(StatusCodes.OK).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
