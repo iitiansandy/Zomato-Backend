@@ -4,7 +4,6 @@ const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
 const bcrypt = require('bcrypt');
-const { StatusCodes } = require("http-status-codes");
 const { port } = require("../config/config");
 // const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
@@ -83,6 +82,11 @@ const getRider = async (req, res) => {
         let { riderId } = req.params;
         if (!riderId) {
             ErrorResponse.message = "rider Id is required";
+            return res.status(badRequest).send({ ErrorResponse });
+        };
+
+        if (!isValidObjectId(riderId)) {
+            ErrorResponse.message = "Invalid riderId";
             return res.status(badRequest).send({ ErrorResponse });
         };
 

@@ -2,7 +2,7 @@ const reviewModel = require('../models/reviewModel');
 const customerModel = require('../models/reviewModel');
 const restaurantModel = require('../models/restaurantModel');
 const { ErrorResponse, SuccessResponse } = require('../uitls/common');
-const { ok, created, badRequest, notFound, unauthorized, forbidden, internalServerError } = require('../uitls/statusCodes');
+const { ok, created, badRequest, notFound, internalServerError } = require('../uitls/statusCodes');
 const { isValidObjectId } = require('mongoose');
 
 // ADD REVIEW TO A RESTAURANT

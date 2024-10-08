@@ -263,6 +263,7 @@ const updateUser = async (req, res) => {
         await u.save();
 
         SuccessResponse.data = u;
+        SuccessResponse.message = "user updated successfully";
         return res.status(ok).send({SuccessResponse});
 
     } catch (error) {

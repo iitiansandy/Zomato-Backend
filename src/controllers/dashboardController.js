@@ -50,7 +50,7 @@ const getDashboard = async (req, res) => {
     } catch (error) {
         console.log(error);
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 

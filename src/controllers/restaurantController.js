@@ -1,5 +1,4 @@
 const restaurantModel = require('../models/restaurantModel');
-const { StatusCodes } = require('http-status-codes');
 
 const path = require("path");
 const fs = require("fs");
@@ -237,10 +236,10 @@ const deleteBanner = async (req, res) => {
         };
 
         SuccessResponse.data = rest;
-        return res.status(StatusCodes.CREATED).send({SuccessResponse});
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ErrorResponse});
+        return res.status(internalServerError).send({ErrorResponse});
     }
 };
 
@@ -491,8 +490,9 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
 
             for (let restaurant of allRestaurants) {
                 let distance = null;
-                if (latitude && longitude && restaurant.coordinates.latitude && restaurant.coordinates.longitude) {
-                    distance = calculateDistance(latitude, longitude, restaurant.coordinates.latitude, restaurant.coordinates.longitude);
+                let r = restaurant.coordinates;
+                if (latitude && longitude && r.latitude && r.longitude) {
+                    distance = calculateDistance(latitude, longitude, r.latitude, r.longitude);
                 };
 
                 if (distance <= range) {
@@ -504,8 +504,9 @@ const searchRestaurantByLocationOrKeywords = async (req, res) => {
                 range = e.range + 5 || 10;
                 for (let restaurant of allRestaurants) {
                     let distance = null;
-                    if (latitude && longitude && restaurant.coordinates.latitude && restaurant.coordinates.longitude) {
-                        distance = calculateDistance(latitude, longitude, restaurant.coordinates.latitude, restaurant.coordinates.longitude);
+                    let r = restaurant.coordinates;
+                    if (latitude && longitude && r.latitude && r.longitude) {
+                        distance = calculateDistance(latitude, longitude, r.latitude, r.longitude);
                     };
     
                     if (distance <= range) {

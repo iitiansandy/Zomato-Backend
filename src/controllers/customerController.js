@@ -1,5 +1,4 @@
 const customerModel = require("../models/customerModel");
-const { StatusCodes } = require("http-status-codes");
 
 const path = require("path");
 const fs = require("fs");
@@ -66,7 +65,7 @@ const customerLogin = async (req, res) => {
         }
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 
@@ -148,7 +147,7 @@ const getAllUsers = async (req, res) => {
         return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
-        return res.status(StatusCodes.INTERNAL_SERVER_ERROR).send({ ErrorResponse });
+        return res.status(internalServerError).send({ ErrorResponse });
     }
 };
 

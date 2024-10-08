@@ -1,7 +1,7 @@
 const { isValidObjectId } = require('mongoose');
 const deliveryModel = require('../models/deliveryModel');
 const orderModel = require('../models/orderModel');
-const { created, ok, badRequest, internalServerError, notFound, unauthorized} = require('../uitls/statusCodes');
+const { created, ok, badRequest, internalServerError, notFound } = require('../uitls/statusCodes');
 
 // CREATE DELIVERY
 const createDelivery = async (req, res) => {

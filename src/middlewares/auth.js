@@ -3,6 +3,7 @@ const { tokenSecretKey } = require('../config/config');
 const adminModel = require('../models/adminModel');
 const jwt = require('jsonwebtoken');
 const util = require('util');
+const { badRequest, unauthorized, forbidden } = require('../uitls/statusCodes');
 
 // Promisify jwt.verify for async/await
 const verifyToken = util.promisify(jwt.verify);
@@ -14,20 +15,18 @@ const Authentication = async (req, res, next) => {
         const tokenWithBearer = req.headers["authorization"] || req.headers["Authorization"];
         // Check if the token is provided
         if (!tokenWithBearer) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: "Authorization token is required"
             });
         };
-
-        console.log("tokenWithBearer: ", tokenWithBearer)
 
         // Extract the token from "Bearer <token>" format
         const [bearer, token] = tokenWithBearer.split(" ");
 
         // Check if the token is properly formatted
         if (bearer !== 'Bearer' || !token) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: 'Invalid token format'
             });
@@ -65,7 +64,7 @@ const Authorization = async (req, res, next) => {
         const { adminId } = req.params;
 
         if (!isValidObjectId(adminId)) {
-            return res.status(400).send({
+            return res.status(badRequest).send({
                 status: false,
                 message: `Invalid MongoDB Object ID: ${adminId}`
             });
@@ -74,11 +73,11 @@ const Authorization = async (req, res, next) => {
         let admin = await adminModel.findById(adminId);
 
         if (!admin) {
-            return res.status(401).send({ status: false, message: 'Invalid credentials'});
+            return res.status(unauthorized).send({ status: false, message: 'Invalid credentials'});
         };
 
         if ( tokenId.toString() !== admin._id.toString() ) {
-            return res.status(403).send({
+            return res.status(forbidden).send({
                 status: false,
                 message: 'Authentication failed: Access denied'
             });

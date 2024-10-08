@@ -7,10 +7,6 @@ const {
     notFound,
     internalServerError,
     badRequest,
-    unauthorized,
-    forbidden,
-    reqTimeout,
-    paymentRequired
   } = require('../uitls/statusCodes');
 
 const path = require("path");
@@ -324,7 +320,8 @@ const deleteProduct = async (req, res) => {
                 message: 'Product not found or already deleted'
             });
         };
-        return res.status(created).send({SuccessResponse});
+        SuccessResponse.message = "product deleted successfully";
+        return res.status(ok).send({SuccessResponse});
     } catch (error) {
         ErrorResponse.error = error;
         return res.status(internalServerError).send({ErrorResponse});
