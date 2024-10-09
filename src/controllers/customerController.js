@@ -11,7 +11,7 @@ const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 const riderModel = require("../models/riderModel");
 const { calculateDistance } = require("./restaurantController");
 const { ok, created, notFound, badRequest, internalServerError } = require('../uitls/statusCodes');
-
+const { uploadImage } = require('./imageController');
 
 let userImgFolder = path.join(__dirname, "..", "userImages");
 
@@ -83,31 +83,18 @@ const registerUser = async (req, res) => {
             });
         } else if (isUserExists && isUserExists.isNewUser === true) {
             let imgObj = null;
-            if ("profilePic" in req.body || (req.files && req.files.profilePic)) {
-                let { profilePic } = req.files;
-                if (!profilePic) {
+            if ("imageFile" in req.body || (req.files && req.files.imageFile)) {
+                let { imageFile } = req.files;
+                if (!imageFile) {
                     return res.status(badRequest).send({
                         status: false,
                         error: "No valid profilePic uploaded.",
                     });
                 }
 
-                if (!fs.existsSync(userImgFolder)) {
-                    fs.mkdirSync(userImgFolder);
-                }
-
-                let currentIpAddress = getCurrentIPAddress();
-                let imgRelativePath = "/userImages/";
-                let imgUniqName = uuid.v4() + "." + profilePic.name.split(".").pop();
-                let imgFullUrl = `http://${currentIpAddress}:${port}${imgRelativePath}`;
-                let imgSavingPath = path.join(userImgFolder, imgUniqName);
-
-                await profilePic.mv(imgSavingPath);
-
-                imgObj = {
-                    fileName: imgUniqName,
-                    filePath: imgFullUrl,
-                };
+                const relPath = "/userImages/";
+                const saveDir = userImgFolder;
+                imgObj = await uploadImage(req, res, relPath, saveDir);
             };
 
             isUserExists.name = parsedData.name;
@@ -205,7 +192,7 @@ const updateUser = async (req, res) => {
             u.FCM_Token = e.FCM_Token;
         };
 
-        if ("profilePic" in e || (req.files && req.files.profilePic)) {
+        if ("imageFile" in e || (req.files && req.files.imageFile)) {
             let oldPicName = u.profilePic.fileName;
             if (oldPicName) {
                 let oldPicPath = path.join(userImgFolder, oldPicName);
@@ -213,19 +200,10 @@ const updateUser = async (req, res) => {
                     fs.unlinkSync(oldPicPath);
                 }
             };
-
-            let currentIpAddress = getCurrentIPAddress();
-            let imgRelativePath = "/userImages/";
-            let imgUniqName = uuid.v4() + "." + profilePic.name.split(".").pop();
-            let imgFullUrl = `http://${currentIpAddress}:${port}${imgRelativePath}`;
-            let imgSavingPath = path.join(userImgFolder, imgUniqName);
-
-            await profilePic.mv(imgSavingPath);
-
-            let imgObj = {
-                fileName: imgUniqName,
-                filePath: imgFullUrl,
-            };
+            const relPath = "/userImages/";
+            const saveDir = userImgFolder;
+            let imgObj = await uploadImage(req, res, relPath, saveDir);
+            
             u.profilePic = imgObj;
         };
 
@@ -303,11 +281,14 @@ const getRiderDistance = async (req, res) => {
         };
 
         let distance = null;
-        if (user.coordinates.latitude && user.coordinates.longitude && rider.coordinates.latitude && rider.coordinates.longitude) {
-            distance = calculateDistance(user.coordinates.latitude, user.coordinates.longitude, rider.coordinates.latitude, rider.coordinates.longitude)
+        let c = user.coordinates;
+        let r = rider.coordinates;
+        if (c.latitude && c.longitude && r.latitude && r.longitude) {
+            distance = calculateDistance(c.latitude, c.longitude, r.latitude, r.longitude);
         };
 
-        SuccessResponse.data = distance;
+        let data = { user, rider, distance };
+        SuccessResponse.data = data;
         SuccessResponse.message = "distance fetched successfully";
         return res.status(ok).send({SuccessResponse});
 

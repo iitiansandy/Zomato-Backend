@@ -146,10 +146,6 @@ const addUpdateRestaurantBanners = async (req, res) => {
         let imageName = parsedData.imageName;
         let isNewPick = parsedData.isNewPick;
 
-        if (!fs.existsSync(bannerFolder)) {
-            fs.mkdirSync(bannerFolder);
-        };
-
         const relPath = "/banners/";
         const saveDir = bannerFolder;
         let imgData = await uploadImage(req, res, relPath, saveDir);

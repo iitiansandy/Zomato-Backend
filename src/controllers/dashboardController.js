@@ -1,6 +1,16 @@
 const categoryModel = require("../models/categoryModel");
 const bannerImageModel = require("../models/bannerModel");
 const { getCurrentIPAddress } = require("../uitls/utils");
+const uuid = require("uuid");
+const path = require("path");
+const fs = require("fs");
+const { port, adminSecretKey } = require("../config/config");
+const { isValidObjectId } = require("mongoose");
+// const userModel = require("../models/userModel");
+const orderModel = require('../models/orderModel');
+const { ErrorResponse, SuccessResponse } = require("../uitls/common");
+const { uploadImage } = require('./imageController');
+let bannerFolder = path.join(__dirname, "..", "..", "banners");
 const {
     badRequest,
     notFound,
@@ -10,21 +20,6 @@ const {
     forbidden,
     ok,
 } = require('../uitls/statusCodes');
-
-
-
-
-const uuid = require("uuid");
-const path = require("path");
-const fs = require("fs");
-const { port, adminSecretKey } = require("../config/config");
-const { isValidObjectId } = require("mongoose");
-// const userModel = require("../models/userModel");
-const orderModel = require('../models/orderModel');
-const { ErrorResponse, SuccessResponse } = require("../uitls/common");
-
-
-let bannerFolder = path.join(__dirname, "..", "..", "banners");
 
 
 // GET DASHBOARD
@@ -102,14 +97,13 @@ const addUpdateBanners = async (req, res) => {
 
         let parsedData = JSON.parse(ImageModel);
 
-        let bannerImage = req.files.bannerImage;
+        let bannerImage = req.files.imageFile;
 
         if (!bannerImage) {
-            return res.status(badRequest).send({ status: false, message: "No banner image uploaded" });
-        };
-
-        if (!fs.existsSync(bannerFolder)) {
-            fs.mkdirSync(bannerFolder);
+            return res.status(badRequest).send({ 
+                status: false, 
+                message: "No banner image uploaded" 
+            });
         };
 
         let index = parsedData.index; //{"isNewPick":false,"index":1,"img_id":"64ffebc1f3bfc5d77220193b","imageName":"1694493633669-432139964.jpg"}
@@ -117,11 +111,9 @@ const addUpdateBanners = async (req, res) => {
         let imageName = parsedData.imageName;
         let isNewPick = parsedData.isNewPick;
 
-        let currentIpAddress = getCurrentIPAddress();
-        let imgRelativePath = "/banners/";
-        let imgUniqName = uuid.v4() + "." + bannerImage.name.split(".").pop();
-        let imgFullUrl = `http://${currentIpAddress}:${port}${imgRelativePath}`;
-        let imgSavingPath = path.join(bannerFolder, imgUniqName);
+        const relPath = "/banners/";
+        const saveDir = bannerFolder;
+        let imgData = await uploadImage(req, res, relPath, saveDir);
 
         if (!isNewPick) {
             let oldImage = bannerObj.bannerImages[index].imageName;
@@ -132,14 +124,7 @@ const addUpdateBanners = async (req, res) => {
                 }
             };
             
-            await bannerImage.mv(imgSavingPath);
-
-            let updatedBannerObj = {
-                imageName: imgUniqName,
-                imagePath: imgFullUrl,
-            };
-
-            bannerObj.bannerImages[index] = updatedBannerObj;
+            bannerObj.bannerImages[index] = imgData;
 
             await bannerObj.save();
 
@@ -151,14 +136,7 @@ const addUpdateBanners = async (req, res) => {
                 data: bannerImages,
             });
         } else {
-            await bannerImage.mv(imgSavingPath);
-
-            let newBannerObj = {
-                imageName: imgUniqName,
-                imagePath: imgFullUrl,
-            };
-
-            bannerObj.bannerImages.push(newBannerObj);
+            bannerObj.bannerImages.push(imgData);
 
             await bannerObj.save();
 
