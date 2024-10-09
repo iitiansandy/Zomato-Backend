@@ -1,11 +1,8 @@
 const customerModel = require("../models/customerModel");
-
 const path = require("path");
 const fs = require("fs");
-const uuid = require("uuid");
 const logger = require("../config/logger.config");
-const { isValidObjectId } = require("mongoose");
-let { getCurrentIPAddress, generateRandomAlphaNumericID } = require("../uitls/utils");
+let { generateRandomAlphaNumericID } = require("../uitls/utils");
 let { port, adminSecretKey } = require("../config/config");
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 const riderModel = require("../models/riderModel");

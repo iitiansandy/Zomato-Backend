@@ -1,11 +1,5 @@
 const orderModel = require('../models/orderModel');
-
-let { getCurrentIPAddress, isValidInteger } = require("../uitls/utils");
-const uuid = require("uuid");
-const path = require("path");
-const fs = require("fs");
-const { port } = require("../config/config");
-const restaurantModel = require("../models/restaurantModel");
+let { isValidInteger } = require("../uitls/utils");
 const { isValidObjectId } = require("mongoose");
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 const { badRequest, internalServerError, notFound, ok } = require('../uitls/statusCodes');

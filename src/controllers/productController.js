@@ -1,5 +1,4 @@
 const productModel = require("../models/productModel");
-const customerModel = require("../models/customerModel");
 const { uploadImage } = require('./imageController');
 
 const {
@@ -12,11 +11,7 @@ const {
 
 const path = require("path");
 const fs = require("fs");
-const uuid = require("uuid");
-const logger = require("../config/logger.config");
 const { isValidObjectId } = require("mongoose");
-let { getCurrentIPAddress } = require("../uitls/utils");
-let { port, adminSecretKey } = require("../config/config");
 
 const { SuccessResponse, ErrorResponse } = require("../uitls/common");
 const { create } = require("../models/categoryModel");

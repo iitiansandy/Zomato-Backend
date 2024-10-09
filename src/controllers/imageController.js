@@ -3,9 +3,8 @@ const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
 const { port } = require("../config/config");
-const restaurantModel = require("../models/restaurantModel");
-const { isValidObjectId } = require("mongoose");
-const { badRequest, created, internalServerError, ok, notFound } = require('../uitls/statusCodes');
+
+const { badRequest, internalServerError } = require('../uitls/statusCodes');
 
 async function uploadImage(req, res, relPath, saveDir) {
     try {
@@ -39,4 +38,3 @@ async function uploadImage(req, res, relPath, saveDir) {
 
 
 module.exports = { uploadImage };
-  

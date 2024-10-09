@@ -1,12 +1,8 @@
 const categoryModel = require("../models/categoryModel");
 const bannerImageModel = require("../models/bannerModel");
-const { getCurrentIPAddress } = require("../uitls/utils");
-const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
-const { port, adminSecretKey } = require("../config/config");
-const { isValidObjectId } = require("mongoose");
-// const userModel = require("../models/userModel");
+const { adminSecretKey } = require("../config/config");
 const orderModel = require('../models/orderModel');
 const { ErrorResponse, SuccessResponse } = require("../uitls/common");
 const { uploadImage } = require('./imageController');

@@ -1,7 +1,5 @@
 const earningModel = require("../models/earningModel");
 const deliveryModel = require("../models/deliveryModel");
-const riderModel = require("../models/riderModel");
-const orderModel = require("../models/orderModel");
 const { badRequest, ok, internalServerError } = require('../uitls/statusCodes');
 
 // CREATE EARNING DATA

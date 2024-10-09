@@ -2,11 +2,8 @@ const restaurantModel = require('../models/restaurantModel');
 
 const path = require("path");
 const fs = require("fs");
-const uuid = require("uuid");
-const logger = require("../config/logger.config");
 const { isValidObjectId } = require("mongoose");
-let { getCurrentIPAddress, generateRandomAlphaNumericID } = require("../uitls/utils");
-let { port, adminSecretKey } = require("../config/config");
+let { generateRandomAlphaNumericID } = require("../uitls/utils");
 const { ErrorResponse, SuccessResponse } = require('../uitls/common');
 const { created, internalServerError, badRequest, ok, notFound } = require('../uitls/statusCodes');
 const { uploadImage } = require('./imageController');

@@ -1,10 +1,7 @@
 const categoryModel = require("../models/categoryModel");
-let { getCurrentIPAddress } = require("../uitls/utils");
 const PDFDocument = require("pdfkit");
-const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
-const { port } = require("../config/config");
 const restaurantModel = require("../models/restaurantModel");
 const { isValidObjectId } = require("mongoose");
 const {
