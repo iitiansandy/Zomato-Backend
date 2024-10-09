@@ -236,7 +236,7 @@ const updateProductById = async (req, res) => {
 
       const relPath = "/productImages/";
       const saveDir = productImgFolder;
-      imgData = await uploadImage(req, res, relPath, saveDir);
+      let imgData = await uploadImage(req, res, relPath, saveDir);
       p.product_image = imgData;
     }
 
