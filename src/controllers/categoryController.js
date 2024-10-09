@@ -1,5 +1,6 @@
 const categoryModel = require("../models/categoryModel");
 let { getCurrentIPAddress } = require("../uitls/utils");
+const PDFDocument = require("pdfkit");
 const uuid = require("uuid");
 const path = require("path");
 const fs = require("fs");
@@ -211,10 +212,175 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+// DOWNLOAD CATEGORY LIST IN A PDF FILE
+const downloadCategoryListPDF1 = async (req, res, next) => {
+  try {
+    let catList = await categoryModel.find({});
+
+    if (!catList || catList.length === 0) {
+      return res.status(404).json({ message: "No categories found." });
+    }
+
+    const catData = catList.map((category) => ({
+      _id: category._id.toString(),
+      name: category.name,
+      description: category.description,
+      image:
+        category.category_image.filePath + category.category_image.fileName,
+    }));
+
+    // Create a new PDF document
+    const doc = new PDFDocument();
+
+    // Define the file path
+    const filePath = path.join(__dirname, "category-list.pdf");
+
+    // Pipe the PDF into a writable stream to the file
+    doc.pipe(fs.createWriteStream(filePath));
+
+    // Set the title for the PDF document
+    doc.fontSize(18).text("Category List", { align: "center" }).moveDown();
+
+    // Iterate over the category data and add it to the PDF
+    catData.forEach((category) => {
+      doc
+        .fontSize(12)
+        .text(`ID: ${category._id}`)
+        .text(`Name: ${category.name}`)
+        .text(`Description: ${category.description}`)
+        .moveDown(1);
+    });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+
+    // Set headers to trigger download in the browser
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="category-list.pdf"'
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    // Send the file to the client
+    res.download(filePath, (err) => {
+      if (err) {
+        next(err);
+      }
+      // Optionally delete the file after sending it
+      fs.unlinkSync(filePath);
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+
+const testPDF = (req, res) => {
+  try {
+    const doc = new PDFDocument();
+    res.setHeader("Content-Disposition", 'attachment; filename="test.pdf"');
+    res.setHeader("Content-Type", "application/pdf");
+    doc.pipe(res);
+    doc.text("This is a test PDF.", 100, 100);
+    doc.end();
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const downloadCategoryListPDF = async (req, res) => {
+  try {
+    let catList = await categoryModel.find({});
+
+    if (!catList || catList.length === 0) {
+      return res.status(404).json({ message: "No categories found." });
+    }
+
+    const catData = catList.map((category) => ({
+      _id: category._id.toString(),
+      name: category.name,
+      description: category.description,
+      image:
+        category.category_image.filePath + category.category_image.fileName,
+    }));
+
+    // Create a new PDF document
+    const doc = new PDFDocument({ margin: 50 });
+
+    // Set response headers to indicate a PDF file download
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="category-list.pdf"'
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    // Pipe the PDF directly to the response
+    doc.pipe(res);
+
+    // Add content to the PDF
+    doc.fontSize(20).text("Category List", { align: "center" }).moveDown(2);
+
+    catData.forEach((category, index) => {
+      doc
+        .fontSize(12)
+        .text(`ID: ${category._id}`)
+        .text(`Name: ${category.name}`)
+        .text(`Description: ${category.description}`)
+        .text(`Image: ${category.image}`)
+        .moveDown(0.5);
+
+      // Optionally, add an image if available
+    //   if (category.image) {
+    //     try {
+    //       // Find the position of the last '/'
+    //       let lastSlashIndex = category.image.lastIndexOf("/");
+    //       // Slice the string starting from the character after the last '/'
+    //       let fileName = category.image.slice(lastSlashIndex + 1);
+    //       // Adjust based on how images are stored
+    //       const imagePath = path.resolve(catImgFolder, fileName);
+    //       if (fs.existsSync(imagePath)) {
+    //         doc.image(imagePath, { width: 150 }).moveDown(1);
+    //       } else {
+    //         doc.text("Image not found.").moveDown(1);
+    //       }
+    //     } catch (imgErr) {
+    //       console.error(
+    //         `Error adding image for category ${category._id}:`,
+    //         imgErr
+    //       );
+    //       doc.text("Error loading image.").moveDown(1);
+    //     }
+    //   }
+
+      // Add a separator line after each category, except the last one
+      if (index !== catData.length - 1) {
+        doc
+          .moveDown(0.5)
+          .strokeColor("#aaaaaa")
+          .moveTo(50, doc.y)
+          .lineTo(550, doc.y)
+          .stroke()
+          .moveDown(0.5);
+      }
+    });
+
+    // Finalize the PDF and end the stream
+    doc.end();
+  } catch (error) {
+    console.log(error);
+    return res.status(internalServerError).send({
+      status: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   addCategory,
   getRestaurantByKeywords,
   getAllCategories,
   updateCategory,
   deleteCategory,
+  downloadCategoryListPDF,
+  testPDF,
 };
