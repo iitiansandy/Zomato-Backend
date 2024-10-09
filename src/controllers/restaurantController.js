@@ -9,6 +9,7 @@ let { getCurrentIPAddress, generateRandomAlphaNumericID } = require("../uitls/ut
 let { port, adminSecretKey } = require("../config/config");
 const { ErrorResponse, SuccessResponse } = require('../uitls/common');
 const { created, internalServerError, badRequest, ok, notFound } = require('../uitls/statusCodes');
+const { uploadImage } = require('./imageController');
 
 
 // function to calculate the distance between two sets of latitude and longitude coordinates
@@ -131,7 +132,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
 
         let parsedData = JSON.parse(ImageModel);
 
-        let bannerImage = req.files.bannerImage;
+        let bannerImage = req.files.imageFile;
 
         if (!bannerImage) {
             return res.status(badRequest).send({ 
@@ -149,11 +150,9 @@ const addUpdateRestaurantBanners = async (req, res) => {
             fs.mkdirSync(bannerFolder);
         };
 
-        let currentIpAddress = getCurrentIPAddress();
-        let imgRelativePath = "/banners/";
-        let imgUniqName = uuid.v4() + "." + bannerImage.name.split(".").pop();
-        let imgFullUrl = `http://${currentIpAddress}:${port}${imgRelativePath}`;
-        let imgSavingPath = path.join(bannerFolder, imgUniqName);
+        const relPath = "/banners/";
+        const saveDir = bannerFolder;
+        let imgData = await uploadImage(req, res, relPath, saveDir);
 
         if (!isNewPick) {
             let oldImg = restaurant.banners[index].fileName;
@@ -164,14 +163,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
                 }
             };
 
-            await bannerImage.mv(imgSavingPath);
-
-            let imgObj = {
-                fileName: imgUniqName,
-                filePath: imgFullUrl
-            };
-
-            restaurant.banners[index] = imgObj;
+            restaurant.banners[index] = imgData;
             await restaurant.save();
             return res.status(ok).send({
                 status: true,
@@ -179,14 +171,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
                 data: restaurant.banners,
             });
         } else {
-            await bannerImage.mv(imgSavingPath);
-
-            let imgObj = {
-                fileName: imgUniqName,
-                filePath: imgFullUrl
-            };
-
-            restaurant.banners.push(imgObj);
+            restaurant.banners.push(imgData);
             await restaurant.save();
             return res.status(ok).send({
                 status: true,
@@ -195,6 +180,7 @@ const addUpdateRestaurantBanners = async (req, res) => {
             });
         };
     } catch (error) {
+        console.log(error);
         ErrorResponse.error = error;
         return res.status(internalServerError).send({ErrorResponse});
     }
@@ -223,7 +209,7 @@ const deleteBanner = async (req, res) => {
             if ( imgId === ele._id.toString() ) {
                 let oldImg = ele.fileName;
                 if (oldImg) {
-                    let imgPath = path.join(__dirname, "..", "banners", oldImg);
+                    let imgPath = path.join(bannerFolder, oldImg);
                     if (fs.existsSync(imgPath)) {
                         fs.unlinkSync(imgPath);
                     };
